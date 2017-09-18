@@ -238,6 +238,7 @@ switch (ENVIRONMENT)
 	// The path to the "application" directory
 	if (is_dir($application_folder))
 	{
+		// question:($_temp = realpath($application_folder)) !== FALSE 这个是说明表达？？？？
 		if (($_temp = realpath($application_folder)) !== FALSE)
 		{
 			$application_folder = $_temp;

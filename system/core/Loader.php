@@ -182,9 +182,9 @@ class CI_Loader {
 	 * Loads and instantiates libraries.
 	 * Designed to be called from application controllers.
 	 *
-	 * @param	string	$library	Library name
-	 * @param	array	$params		Optional parameters to pass to the library class constructor
-	 * @param	string	$object_name	An optional object name to assign to
+	 * @param	string	$library	Library name 加载类的名称
+	 * @param	array	$params		Optional parameters to pass to the library class constructor 传递给该加载类构造函数的可选参数
+	 * @param	string	$object_name	An optional object name to assign to 暂时理解成别名
 	 * @return	object
 	 */
 	public function library($library, $params = NULL, $object_name = NULL)
@@ -199,10 +199,12 @@ class CI_Loader {
 			{
 				if (is_int($key))
 				{
+					// 如果给的是个索引数组那么直接将索引数组的值作为加载的类
 					$this->library($value, $params);
 				}
 				else
 				{
+					// 如果给的是个关联数组那么将关联数组的键名作为加载的类，值作为别名
 					$this->library($key, $params, $value);
 				}
 			}
@@ -210,11 +212,13 @@ class CI_Loader {
 			return $this;
 		}
 
+		// 参数是NULL或者不是数组那么参数的值就是空
 		if ($params !== NULL && ! is_array($params))
 		{
 			$params = NULL;
 		}
 
+		// 开始加载
 		$this->_ci_load_library($library, $params, $object_name);
 		return $this;
 	}
@@ -774,8 +778,11 @@ class CI_Loader {
 	{
 		$path = rtrim($path, '/').'/';
 
+		// 往_ci_library_paths==APPPATH, BASEPATH,加入指定的路径
 		array_unshift($this->_ci_library_paths, $path);
+		// 往_ci_model_paths==APPPATH,
 		array_unshift($this->_ci_model_paths, $path);
+		// 往_ci_helper_paths==APPPATH, BASEPATH
 		array_unshift($this->_ci_helper_paths, $path);
 
 		$this->_ci_view_paths = array($path.'views/' => $view_cascade) + $this->_ci_view_paths;
@@ -1002,6 +1009,8 @@ class CI_Loader {
 	 * @used-by	CI_Loader::library()
 	 * @uses	CI_Loader::_ci_init_library()
 	 *
+	 *
+	 * 关于参数参考library
 	 * @param	string	$class		Class name to load
 	 * @param	mixed	$params		Optional parameters to pass to the class constructor
 	 * @param	string	$object_name	Optional object name to assign to
@@ -1012,10 +1021,13 @@ class CI_Loader {
 		// Get the class name, and while we're at it trim any slashes.
 		// The directory path can be included as part of the class name,
 		// but we don't want a leading slash
+		//
+		// 去掉.php和/防止用户自行添加这两个字符
 		$class = str_replace('.php', '', trim($class, '/'));
 
 		// Was the path included with the class name?
 		// We look for a slash to determine this
+		// question:这是再干嘛？？？
 		if (($last_slash = strrpos($class, '/')) !== FALSE)
 		{
 			// Extract the path
@@ -1029,9 +1041,11 @@ class CI_Loader {
 			$subdir = '';
 		}
 
+		// 大写类名的首字母，以防止用户写着小写
 		$class = ucfirst($class);
 
 		// Is this a stock library? There are a few special conditions if so ...
+		// 加载的是否是一个核心类
 		if (file_exists(BASEPATH.'libraries/'.$subdir.$class.'.php'))
 		{
 			return $this->_ci_load_stock_library($class, $subdir, $params, $object_name);
@@ -1293,21 +1307,26 @@ class CI_Loader {
 	 */
 	protected function _ci_autoloader()
 	{
+		// APPPATH：程序所在目录
+		// 如果存在autoload配置那么加载autoload文件
 		if (file_exists(APPPATH.'config/autoload.php'))
 		{
 			include(APPPATH.'config/autoload.php');
 		}
 
+		//question：加载这个文件是何用意，根据环境常量来加载autoload??
 		if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php'))
 		{
 			include(APPPATH.'config/'.ENVIRONMENT.'/autoload.php');
 		}
 
+		// 要是还没找到$autoload那么就直接返回了
 		if ( ! isset($autoload))
 		{
 			return;
 		}
 
+		// 加载第三方的库
 		// Autoload packages
 		if (isset($autoload['packages']))
 		{
