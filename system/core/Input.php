@@ -176,6 +176,8 @@ class CI_Input {
 	 */
 	protected function _fetch_from_array(&$array, $index = NULL, $xss_clean = NULL)
 	{
+		// 当左边为true则后面的就不执行了
+		//false才会执行后面的跟关键字OR有关系，只要前边成立后面就不再执行了
 		is_bool($xss_clean) OR $xss_clean = $this->_enable_xss;
 
 		// If $index is NULL, it means that the whole $array is requested
