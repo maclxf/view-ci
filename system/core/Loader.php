@@ -150,10 +150,14 @@ class CI_Loader {
 	 *		without breaking *package_path*() methods.
 	 * @uses	CI_Loader::_ci_autoloader()
 	 * @used-by	CI_Controller::__construct()
+	 *
+	 *
+	 * 加载类的初始化方法，由CI_Controller的构造函数调用->问题那么为何不直接调用这个自动加载就因为是私有方法？？
 	 * @return	void
 	 */
 	public function initialize()
 	{
+		// 调用自动加载方法
 		$this->_ci_autoloader();
 	}
 
@@ -691,7 +695,7 @@ class CI_Loader {
 	/**
 	 * Config Loader
 	 *
-	 * Loads a config file (an alias for CI_Config::load()).
+	 * Loads a config file (an alias for CI_Config::load()).详情看这里，还未看
 	 *
 	 * @uses	CI_Config::load()
 	 * @param	string	$file			Configuration file name
@@ -785,12 +789,15 @@ class CI_Loader {
 		// 往_ci_helper_paths==APPPATH, BASEPATH
 		array_unshift($this->_ci_helper_paths, $path);
 
+		// 问题这里是干什么的
 		$this->_ci_view_paths = array($path.'views/' => $view_cascade) + $this->_ci_view_paths;
 
-		// Add config file path
+		// Add config file path---> 怎么添加配置文件的
 		$config =& $this->_ci_get_component('config');
 		$config->_config_paths[] = $path;
 
+
+		// 返回修改了_ci_library_paths，_ci_model_paths，_ci_helper_paths的本加载类
 		return $this;
 	}
 
@@ -1301,6 +1308,7 @@ class CI_Loader {
 	 * CI Autoloader
 	 *
 	 * Loads component listed in the config/autoload.php file.
+	 * 加载config文件夹中autoload中的各种组件比如helper,library,modle...
 	 *
 	 * @used-by	CI_Loader::initialize()
 	 * @return	void
@@ -1332,24 +1340,31 @@ class CI_Loader {
 		{
 			foreach ($autoload['packages'] as $package_path)
 			{
+				// 加载第三方库，就是将第三方库的文件名分别加入到
+				// _ci_library_paths
+				// _ci_model_paths
+				// _ci_helper_paths
 				$this->add_package_path($package_path);
 			}
 		}
 
 		// Load any custom config file
+		// 加载config文件
 		if (count($autoload['config']) > 0)
 		{
 			foreach ($autoload['config'] as $val)
 			{
-				$this->config($val);
+				$this->config($val);//an alias for CI_Config::load()未看
 			}
 		}
 
 		// Autoload helpers and languages
 		foreach (array('helper', 'language') as $type)
 		{
+			// 是否设置了helper或者language的配置，并且该配置中有值
 			if (isset($autoload[$type]) && count($autoload[$type]) > 0)
 			{
+				// $this->helper(array('url','common'))未看
 				$this->$type($autoload[$type]);
 			}
 		}
@@ -1357,16 +1372,18 @@ class CI_Loader {
 		// Autoload drivers
 		if (isset($autoload['drivers']))
 		{
-			$this->driver($autoload['drivers']);
+			$this->driver($autoload['drivers']);//---》what`s this
 		}
 
 		// Load libraries
 		if (isset($autoload['libraries']) && count($autoload['libraries']) > 0)
 		{
 			// Load the database driver.
+			// ??do what
 			if (in_array('database', $autoload['libraries']))
 			{
 				$this->database();
+				//返回一个数组，该数组包括了所有在 array1 中但是不在任何其它参数数组中的值。注意键名保留不变。
 				$autoload['libraries'] = array_diff($autoload['libraries'], array('database'));
 			}
 
@@ -1379,6 +1396,10 @@ class CI_Loader {
 		{
 			$this->model($autoload['model']);
 		}
+
+		// 所以自动加载是有顺序的
+		// 1.packages 2.config 3.helper 4.language 5.drivers 6.libraries 7.model
+		// 那么是否可以考虑更换顺序？之前有因为先加载了libraries类里面加载了某个model而这个model继承的model还没有自动加载导致导致报错
 	}
 
 	// --------------------------------------------------------------------
