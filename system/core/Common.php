@@ -239,22 +239,22 @@ if ( ! function_exists('get_config'))
 	{
 		static $config;
 
-		if (empty($config))
+		if (empty($config))//看加载过配置文件否，如果没加载就加载
 		{
 			$file_path = APPPATH.'config/config.php';
 			$found = FALSE;
-			if (file_exists($file_path))
+			if (file_exists($file_path))// 存在那么就是找到了并且加载这个文件
 			{
 				$found = TRUE;
 				require($file_path);
 			}
 
 			// Is the config file in the environment folder?
-			if (file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))
+			if (file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))// 看环境文件夹中的配置是否加载
 			{
 				require($file_path);
 			}
-			elseif ( ! $found)
+			elseif ( ! $found)// 没找到环境文件夹中的配置则则就是i没找到就报错
 			{
 				set_status_header(503);
 				echo 'The configuration file does not exist.';
@@ -297,7 +297,7 @@ if ( ! function_exists('config_item'))
 		if (empty($_config))
 		{
 			// references cannot be directly assigned to static variables, so we use an array
-			$_config[0] =& get_config();
+			$_config[0] =& get_config();// 把配置文件加载进静态属性（数组）
 		}
 
 		return isset($_config[0][$item]) ? $_config[0][$item] : NULL;

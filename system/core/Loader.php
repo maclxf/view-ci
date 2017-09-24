@@ -593,11 +593,19 @@ class CI_Loader {
 	 */
 	public function helper($helpers = array())
 	{
+		// 如果is_array是TRUE后面半句就不执行了，直接开始foreach
+		// 如果是FALSE那么就让$helpers作为数组的值
+		// 这样做就是为了支持字符串和数组
 		is_array($helpers) OR $helpers = array($helpers);
 		foreach ($helpers as &$helper)
 		{
+			// 取出helper文件的名称
+			// 如/etc/sudoers.d   ------>   sudoers
 			$filename = basename($helper);
+			// 取出helper文件的路径
+			// 如果文件名和传入的helper相同表明不用路径，否则就单独取出文件的路径
 			$filepath = ($filename === $helper) ? '' : substr($helper, 0, strlen($helper) - strlen($filename));
+			// 从$filename按正则找到#(_helper)?(\.php)?$#i匹配的内容并以''替换
 			$filename = strtolower(preg_replace('#(_helper)?(\.php)?$#i', '', $filename)).'_helper';
 			$helper   = $filepath.$filename;
 
@@ -607,21 +615,23 @@ class CI_Loader {
 			}
 
 			// Is this a helper extension request?
-			$ext_helper = config_item('subclass_prefix').$filename;
+			// 以下都是加载第三方或者自己写的helper
+			$ext_helper = config_item('subclass_prefix').$filename;// 看是不是用户自己写的helper，作为扩展helper
 			$ext_loaded = FALSE;
 			foreach ($this->_ci_helper_paths as $path)
 			{
+				// 分别加载app和system以及第三方库中的用户自己写的helper
 				if (file_exists($path.'helpers/'.$ext_helper.'.php'))
 				{
 					include_once($path.'helpers/'.$ext_helper.'.php');
-					$ext_loaded = TRUE;
+					$ext_loaded = TRUE;//扩展被加载的开关
 				}
 			}
 
 			// If we have loaded extensions - check if the base one is here
 			if ($ext_loaded === TRUE)
 			{
-				$base_helper = BASEPATH.'helpers/'.$helper.'.php';
+				$base_helper = BASEPATH.'helpers/'.$helper.'.php';//确认基础的helper是否加载了及system
 				if ( ! file_exists($base_helper))
 				{
 					show_error('Unable to load the requested file: helpers/'.$helper.'.php');
@@ -634,6 +644,7 @@ class CI_Loader {
 			}
 
 			// No extensions found ... try loading regular helpers and/or overrides
+			// 加载有规整的或则重写helper
 			foreach ($this->_ci_helper_paths as $path)
 			{
 				if (file_exists($path.'helpers/'.$helper.'.php'))
